@@ -8,12 +8,19 @@ OPENCAS_CACHE_SIZE=${OPENCAS_CACHE_SIZE:-1048576}
 
 function git_clone_opencas {
     cd $OPENCAS_REPO_DIR
-    git_clone $OPENCAS_REPO_URL $OPENCAS_REPO_DIR $OPENCAS_REPO_BRANCH
+    git clone $OPENCAS_REPO_URL $OPENCAS_REPO_DIR/open-cas-linux -b $OPENCAS_REPO_BRANCH
     cd open-cas-linux
     git submodule update --init
 }
 
 function compile_opencas {
+    if is_ubuntu; then
+        install_package linux-headers-$(uname -r) gcc
+    elif is_fedora; then
+        install_package kernel-headers.x86_64 kernel-devel.x86_64 gcc
+    else
+        exit_distro_not_supported "installing packages"
+    fi
     sudo ./configure
     make
 }
@@ -73,6 +80,11 @@ if [[ "$1" == "stack" && "$2" == "pre-install" ]]; then
     install_opencas
     echo_summary "create cache instance"
     create_cache_instance
+elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
+    # configure open-cas in /path/to/nova-cpu.conf
+    iniset $NOVA_CPU_CONF compute volume_local_cache_driver opencas
+    iniset $NOVA_CPU_CONF compute volume_local_cache_instance_ids 1
+    iniset $TEMPEST_CONFIG volume-feature-enabled volume_local_cache True
 fi
 
 if [[ "$1" == "unstack" ]]; then

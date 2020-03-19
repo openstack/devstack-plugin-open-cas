@@ -1,8 +1,31 @@
+- job:
+    name: devstack-plugin-open-cas-tempest
+    parent: tempest-full-py3
+    description: |
+      Base integration tests that runs with the open-cas devstack plugin and py3.
+    required-projects:
+      - opendev.org/openstack/cinder-tempest-plugin
+      - opendev.org/openstack/devstack-plugin-open-cas
+    timeout: 7200
+    vars:
+      devstack_localrc:
+        # Volume local cache don't support multiattach
+        ENABLE_VOLUME_MULTIATTACH: False
+      tempest_plugins:
+        - cinder-tempest-plugin
+      devstack_plugins:
+        devstack-plugin-open-cas: https://opendev.org/openstack/devstack-plugin-open-cas
+      tox_envlist: all
+      tempest_test_regex: (^tempest\.(api|scenario)|(^cinder_tempest_plugin))
+      tempest_test_blacklist: '{{ ansible_user_dir }}/{{ zuul.projects["opendev.org/openstack/tempest"].src_dir }}/tools/tempest-integrated-gate-storage-blacklist.txt'
+
 - project:
     check:
       jobs:
         - openstack-tox-bashate
+        - devstack-plugin-open-cas-tempest
 
     gate:
       jobs:
         - openstack-tox-bashate
+        - devstack-plugin-open-cas-tempest

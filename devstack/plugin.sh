@@ -81,10 +81,19 @@ if [[ "$1" == "stack" && "$2" == "pre-install" ]]; then
     echo_summary "create cache instance"
     create_cache_instance
 elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
-    # configure open-cas in /path/to/nova-cpu.conf
-    iniset $NOVA_CPU_CONF compute volume_local_cache_driver opencas
-    iniset $NOVA_CPU_CONF compute volume_local_cache_instance_ids 1
-    iniset $TEMPEST_CONFIG volume-feature-enabled volume_local_cache True
+    # Configure open-cas in nova-cpu.conf. Cannot set in below way because
+    # $NOVA_CPU_CONF will be overwritten in starting Nova phase. Refer to
+    # devstack/lib/nova, function start_nova_compute()
+    # iniset $NOVA_CPU_CONF compute volume_local_cache_driver opencas
+    # iniset $NOVA_CPU_CONF compute volume_local_cache_instance_ids 1
+    if [[ $ENABLE_VOLUME_LOCAL_CACHE == "True" ]]; then
+        localconf_set $TOP_DIR/local.conf post-config \$NOVA_CPU_CONF compute volume_local_cache_driver opencas
+        localconf_set $TOP_DIR/local.conf post-config \$NOVA_CPU_CONF compute volume_local_cache_instance_ids 1
+    fi
+elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
+    if [[ $ENABLE_VOLUME_LOCAL_CACHE == "True" ]]; then
+        iniset $TEMPEST_CONFIG volume-feature-enabled volume_local_cache True
+    fi
 fi
 
 if [[ "$1" == "unstack" ]]; then

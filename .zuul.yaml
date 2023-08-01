@@ -17,7 +17,7 @@
         devstack-plugin-open-cas: https://opendev.org/openstack/devstack-plugin-open-cas
       tox_envlist: all
       tempest_test_regex: (^tempest\.(api|scenario)|(^cinder_tempest_plugin))
-      tempest_test_blacklist: '{{ ansible_user_dir }}/{{ zuul.projects["opendev.org/openstack/tempest"].src_dir }}/tools/tempest-integrated-gate-storage-blacklist.txt'
+      tempest_test_exclude_list: '{{ ansible_user_dir }}/{{ zuul.projects["opendev.org/openstack/tempest"].src_dir }}/tools/tempest-integrated-gate-storage-exclude-list.txt'
 
 - project:
     check:
